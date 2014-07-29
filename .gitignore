@@ -52,5 +52,4 @@ coverage.xml
 docs/_build/
 
 #Random
-.idea
-.swp
+*.swp
