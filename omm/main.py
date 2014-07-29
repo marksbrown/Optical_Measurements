@@ -25,7 +25,7 @@ def recursive_data_search(key_words, verbose=0):
     
     
     if isinstance(key_words, Iterable) and isinstance(key_words, str):
-        key_words = list(key_words)
+        key_words = [key_words, ]
 
     for key_word in key_words:
         for root, directories, all_files in os.walk(os.getcwd()):
