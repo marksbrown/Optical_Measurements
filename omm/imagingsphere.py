@@ -1,44 +1,95 @@
-'''
+"""
 Functions used to process Imaging Sphere Data
 
 Author : Mark S. Brown
 Started : Thursday 16th January 2014
-'''
+"""
 
 from __future__ import division, print_function
-from numpy import linspace, loadtxt, meshgrid
-from matplotlib.pyplot import cm
+import re
+from itertools import tee, izip
+from .main import recursive_data_search
+
+def parse_bsdf(key_words, verbose=0):
+
+    for key_word, full_loc in recursive_data_search(key_words, allowed_ext=('brdf')):
+        yield key_word, full_loc, parse_BRDF_rawdata(full_loc, verbose=verbose)
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
+
+def parse_BRDF_rawdata(full_loc, verbose=0):
+    """
+    Function to parse BRDF data from Radiant Zemax Imaging Sphere
+
+    --args--
+    full_loc - absolute location and full_loc of raw data we wish to process
+    verbose - verbosity control
+    """
+
+    length_of_data = {}  # Expected size of each parameter
+    key_word_data = {}  # Values of each key from the subsequent line
+    raw_data = {}  # output of data
+
+    preamble_finished = False
+
+    for previous_line, next_line in pairwise(open(full_loc, 'r')):
+
+        previous_line = previous_line.strip('\r\n')
+        next_line = next_line.strip('\r\n')
+
+        if previous_line == 'DataBegin':
+            preamble_finished = True
+
+        if next_line == 'DataEnd':
+            break
+
+        if not preamble_finished:
+            splitted_line = re.split('\s*', previous_line)
+
+            if len(splitted_line) == 2:
+                key, value = splitted_line
+
+                try:
+                    float(value)
+                except ValueError:
+                    continue
+
+                length_of_data[key] = float(value)
+                key_word_data[key] = [float(value) for value in re.split('\s*', next_line) if value]
+
+                assert length_of_data[key] == len(key_word_data[key]), "Number of parameters does not match predicted!"
+
+            continue
+
+        if next_line.startswith('Wavelength'):
+            current_angle_index = 0
+            current_wavelength = float(re.split('\s*', next_line)[-1])
+            raw_data[current_wavelength] = {key : [] for key in key_word_data['AngleOfIncidence']}
+            continue
+
+        if next_line.startswith('TIS'):  # increment incident angle
+            current_angle = key_word_data['AngleOfIncidence'][current_angle_index]
+            current_angle_index += 1
+            continue
+
+        if not next_line:  # Skips empty lines
+            continue
+
+        if next_line.startswith('Tris'):  # TODO :: Colour information is currently not used
+            continue
+
+        raw_data[current_wavelength][current_angle].append([float(value) for value in next_line.split('\t')])
 
 
-def plotdata(df, ax, fig, plottype, **kwargs):
-    nangle = kwargs.get('nangle', 181)
-    N = kwargs.get('N', 100)
-    ymax = kwargs.get('ymax', 1)
-    lbl = kwargs.get('label', "")
+    return key_word_data, raw_data
 
-    I = linspace(0, 180, nangle)
-    
-    data = loadtxt(df['fileloc'], skiprows=9)
-    
-    if plottype == 'slicex':    
-        dataslice = data[int(nangle / 2), ...]
-    if plottype == 'slicey':
-        dataslice = data[..., int(nangle / 2)]
-    if plottype == 'slicex' or plottype == 'slicey':
-        ax.grid(True)
-        ax.plot(I, dataslice, label=lbl)
-        ax.set_ylim(0, ymax)
-    if plottype == 'layer':
-        ctf = ax.contourf(I, I, data, N, cmap=cm.hot, levels=linspace(0, ymax, N))
-        cb = fig.colorbar(ctf, ax=ax, use_gridspec=True, shrink=0.7)
-        cb.set_label("Intensity per unit area")
-        cb.set_ticks(linspace(0, ymax, 5))
-    if plottype == 'layer3D':
-        Ix, Iy = meshgrid(I, I)
-        surf = ax.plot_surface(Ix, Iy, data, rstride=5, cstride=5, vmax=ymax, 
-                                cmap=cm.hot, linewidth=0, antialiased=False)
-        ax.set_zlim(0, ymax)
-
-        cb = fig.colorbar(surf, ax=ax, use_gridspec=True, shrink=0.5)
-        cb.set_label("Intensity per unit area")
-        cb.set_ticks(linspace(0, ymax, 5))

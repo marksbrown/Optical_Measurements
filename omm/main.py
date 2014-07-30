@@ -18,7 +18,7 @@ from __future__ import print_function, division
 from collections import Iterable
 import os
 
-def recursive_data_search(key_words, verbose=0):
+def recursive_data_search(key_words, allowed_ext=('txt', 'brdf'), verbose=0):
     """
     Traversal over directory to yield full location of matching files
     """
@@ -30,8 +30,10 @@ def recursive_data_search(key_words, verbose=0):
     for key_word in key_words:
         for root, directories, all_files in os.walk(os.getcwd()):
             for a_file in all_files:
-                if not a_file.endswith('txt') or not a_file.startswith(key_word):
+
+                if not any(a_file.endswith(ext) for ext in allowed_ext) or not a_file.startswith(key_word):
                     continue
+
                 if verbose > 0:
                      print(a_file)
                 yield key_word, os.path.join(root, a_file)
