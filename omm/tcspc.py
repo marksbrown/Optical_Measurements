@@ -17,7 +17,7 @@ def parse_time_data(file_parameters, root_dir, dropcols=None, verbose=0, **kwarg
     of form key_word : (
     """
 
-    for key_word, full_loc in recursive_data_search(file_parameters, root_dir, allowed_ext=('txt'), **kwargs):
+    for key_word, full_loc in recursive_data_search(file_parameters, root_dir, allowed_ext=('csv', 'txt'), **kwargs):
         if verbose > 0:
             print(key_word, full_loc)
 
@@ -35,6 +35,11 @@ def parse_time_data(file_parameters, root_dir, dropcols=None, verbose=0, **kwarg
         df.index = df.time
 
         for col in chain(('time', columns[-1])):
-            df = df.drop(col, axis=1)
+            try:
+                df = df.drop(col, axis=1)
+            except ValueError:
+                if verbose > 0:
+                    print("there is no {} column\nColumns available are : {}".format(col, df.columns))
+                break
 
         yield key_word, full_loc, df
