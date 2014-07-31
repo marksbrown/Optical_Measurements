@@ -37,59 +37,59 @@ def parse_BRDF_rawdata(full_loc, verbose=0):
     """
 
     length_of_data = {}  # Expected size of each parameter
-    key_word_data = {}  # Values of each key from the subsequent line  
+    key_word_data = {}  # Values of each key from the subsequent line
     raw_data = {}  # output of data
-    
+
     preamble_finished = False
-    
+
     for previous_line, next_line in pairwise(open(full_loc, 'r')):
-        
+
         previous_line = previous_line.strip('\r\n')
         next_line = next_line.strip('\r\n')
-        
+
         if previous_line == 'DataBegin':
             preamble_finished = True
-            
+
         if next_line == 'DataEnd':
             break
-        
+
         if not preamble_finished:
             splitted_line = re.split('\s*', previous_line)
-            
+
             if len(splitted_line) == 2:
                 key, value = splitted_line
-                
+
                 try:
                     float(value)
                 except ValueError:
                     continue
-                
+
                 length_of_data[key] = float(value)
                 key_word_data[key] = [float(value) for value in re.split('\s*', next_line) if value]
-                
+
                 assert length_of_data[key] == len(key_word_data[key]), "Number of parameters does not match predicted!"
-                
+
             continue
-        
+
         if next_line.startswith('Wavelength'):
             current_angle_index = 0
             current_wavelength = float(re.split('\s*', next_line)[-1])
             raw_data[current_wavelength] = {key : [] for key in key_word_data['AngleOfIncidence']}
             continue
-            
+
         if next_line.startswith('TIS'):  # increment incident angle
             current_angle = key_word_data['AngleOfIncidence'][current_angle_index]
             current_angle_index += 1
             continue
-        
+
         if not next_line:  # Skips empty lines
-            continue 
-        
+            continue
+
         if next_line.startswith('Tris'):  # TODO :: Colour information is currently not used
             continue
-        
+
         raw_data[current_wavelength][current_angle].append([float(value) for value in next_line.split('\t')])
-        
-    
+
+
     return key_word_data, raw_data
 
