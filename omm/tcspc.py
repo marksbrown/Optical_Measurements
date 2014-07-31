@@ -11,15 +11,16 @@ import string
 import pandas as pd
 from itertools import chain
 
-def parse_time_data(file_parameters, verbose=0):
+def parse_time_data(file_parameters, root_dir, dropcols=None, verbose=0, **kwargs):
     """
     Returns clean Pandas DataFrame when given useful file_parameters for associated data
     of form key_word : (
     """
 
-    for key_word, full_loc in recursive_data_search(file_parameters.keys(), allowed_ext=('txt')):
+    for key_word, full_loc in recursive_data_search(file_parameters, root_dir, allowed_ext=('txt'), **kwargs):
+        if verbose > 0:
+            print(key_word, full_loc)
 
-        specific_parameters = file_parameters[key_word]
         with open(full_loc, 'r') as f:
 
                 for k, a_line in enumerate(f):
@@ -33,7 +34,7 @@ def parse_time_data(file_parameters, verbose=0):
 
         df.index = df.time
 
-        for col in chain(('time', columns[-1]), specific_parameters['dropcols']):
+        for col in chain(('time', columns[-1])):
             df = df.drop(col, axis=1)
 
         yield key_word, full_loc, df
