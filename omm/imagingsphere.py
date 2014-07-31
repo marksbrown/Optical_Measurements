@@ -10,9 +10,9 @@ import re
 from itertools import tee, izip
 from .main import recursive_data_search
 
-def parse_bsdf(key_words, verbose=0):
+def parse_bsdf(key_words, root_loc, verbose=0):
 
-    for key_word, full_loc in recursive_data_search(key_words, allowed_ext=('brdf')):
+    for key_word, full_loc in recursive_data_search(key_words, root_loc, allowed_ext=('brdf')):
         yield key_word, full_loc, parse_BRDF_rawdata(full_loc, verbose=verbose)
 
 def pairwise(iterable):

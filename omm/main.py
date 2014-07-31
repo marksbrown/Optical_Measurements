@@ -18,7 +18,7 @@ from __future__ import print_function, division
 from collections import Iterable
 import os
 
-def recursive_data_search(key_words, allowed_ext=('txt', 'brdf'), ignored_directories=('optical_measurement_module', 'archive', '/.'), verbose=0):
+def recursive_data_search(key_words, root_dir, allowed_ext=('txt', 'brdf'), ignored_directories=('optical_measurement_module', 'archive', '/.'), verbose=0):
     """
     Traversal over directory to yield full location of matching files
     """
@@ -27,11 +27,10 @@ def recursive_data_search(key_words, allowed_ext=('txt', 'brdf'), ignored_direct
         key_words = [key_words, ]
 
     for key_word in key_words:
-        for root, directories, all_files in os.walk(os.getcwd()):
+        for root, directories, all_files in os.walk(root_dir):
 
             if any(root.find(a_directory) >= 0 for a_directory in ignored_directories):
-                if verbose > 0:
-                    print("Skipping", root)
+                print("Skipping", root)
                 continue
 
             for a_file in all_files:
