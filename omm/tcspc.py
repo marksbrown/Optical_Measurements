@@ -7,7 +7,6 @@ Started : Wednesday 30th July 2014
 
 from __future__ import division, print_function
 from .main import recursive_data_search
-import string
 import pandas as pd
 from itertools import chain
 
@@ -24,22 +23,21 @@ def parse_time_data(file_parameters, root_dir, dropcols=None, verbose=0, **kwarg
         with open(full_loc, 'r') as f:
 
                 for k, a_line in enumerate(f):
+                    if a_line.startswith('Labels'):
+                        column_names = a_line.split(',')
+                        column_names[0] = 'time'
+
                     if a_line.startswith('0.00'):
                         columns_to_pull = len(a_line.split(',')) - 1   # first and last columns are ignored
                         break
 
 
-        columns = ['time']+list(string.uppercase[:columns_to_pull])
-        df = pd.read_csv(full_loc, skiprows=k, sep=",", names=columns)
-
+        df = pd.read_csv(full_loc, skiprows=k, sep=",", names=column_names)
         df.index = df.time
 
-        for col in chain(('time', columns[-1])):
-            try:
-                df = df.drop(col, axis=1)
-            except ValueError:
-                if verbose > 0:
-                    print("there is no {} column\nColumns available are : {}".format(col, df.columns))
-                break
+        drop_cols = ('time', '\r\n')
+        for actual_col in df.columns:
+            if actual_col in drop_cols:
+                df = df.drop(actual_col, axis=1)
 
         yield key_word, full_loc, df
