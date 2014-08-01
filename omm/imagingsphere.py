@@ -10,6 +10,22 @@ import re
 from itertools import tee, izip
 from .main import recursive_data_search
 
+def parse_export_data(key_words, root_loc, verbose=0):
+
+    for key_word, full_loc in omm.ims.recursive_data_search(key_words, root_loc, allowed_ext=('txt')):
+        yield full_loc, parse_filename(full_loc), parse_single_measurement(full_loc)
+
+def parse_filename(full_loc):
+    key_word, incident_angle = re.findall('.*/(.*)_I(\d*)', full_loc)[0]
+    return key_word, float(incident_angle)
+
+def parse_single_measurement(full_loc, verbose=0):
+    """
+    Parse individual 'export data' files from IS-SA software produced by the Imaging Sphere
+    """
+    return np.loadtxt(full_loc, skiprows=9)
+
+
 def parse_bsdf(key_words, root_loc, verbose=0):
 
     for key_word, full_loc in recursive_data_search(key_words, root_loc, allowed_ext=('brdf')):
