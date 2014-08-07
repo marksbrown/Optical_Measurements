@@ -40,7 +40,7 @@ def parse_single_measurement(full_loc, verbose=0):
 
 def parse_bsdf(key_words, root_loc, verbose=0):
 
-    for key_word, full_loc in recursive_data_search(key_words, root_loc, allowed_ext=('brdf')):
+    for key_word, full_loc in recursive_data_search(key_words, root_loc, allowed_ext=('brdf', 'btdf')):
         yield key_word, full_loc, parse_BRDF_rawdata(full_loc, verbose=verbose)
 
 def pairwise(iterable):
