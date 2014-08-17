@@ -109,7 +109,7 @@ def parse_BRDF_rawdata(full_loc, verbose=0):
 
         if next_line.startswith('TIS'):  # increment incident angle
             current_angle = key_word_data['AngleOfIncidence'][current_angle_index]
-            tis_data[current_wavelength][current_angle] = next_line.split(' ')[-1]
+            tis_data[current_wavelength][current_angle] = float(next_line.split(' ')[-1])
             current_angle_index += 1
             continue
 
