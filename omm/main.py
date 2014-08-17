@@ -39,8 +39,9 @@ def recursive_data_search(key_words, root_dir, allowed_ext=('txt', 'brdf'),
                 if verbose > 0:
                     print("Root : {} \nFile: {}".format(root, a_file))
 
-                if not key_word and not a_file.find(key_word) > 0:
-                    continue
+                if key_word != '':
+                    if a_file.find(key_word) < 0:
+                        continue
 
                 if not any(a_file.endswith(ext) for ext in allowed_ext): 
                     continue
