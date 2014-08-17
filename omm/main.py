@@ -18,13 +18,14 @@ from __future__ import print_function, division
 from collections import Iterable
 import os
 
-def recursive_data_search(key_words, root_dir, allowed_ext=('txt', 'brdf'), ignored_directories=('optical_measurement_module', 'archive', '/.'), verbose=0):
+def recursive_data_search(key_words, root_dir, allowed_ext=('txt', 'brdf'),
+        ignored_directories=('optical_measurement_module', 'archive', '/.'), verbose=0):
     """
     Traversal over directory to yield full location of matching files
     """
 
     if isinstance(key_words, Iterable) and isinstance(key_words, str):
-        key_words = [key_words, ]
+        key_words = [key_words, ]  # if only a single key_word, allows correct iteration
 
     for key_word in key_words:
         for root, directories, all_files in os.walk(root_dir):
@@ -38,7 +39,10 @@ def recursive_data_search(key_words, root_dir, allowed_ext=('txt', 'brdf'), igno
                 if verbose > 0:
                     print("Root : {} \nFile: {}".format(root, a_file))
 
-                if not any(a_file.endswith(ext) for ext in allowed_ext) or not a_file.find(key_word) > 0:
+                if not key_word and not a_file.find(key_word) > 0:
+                    continue
+
+                if not any(a_file.endswith(ext) for ext in allowed_ext): 
                     continue
 
                 if verbose > 0:
