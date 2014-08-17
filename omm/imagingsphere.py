@@ -67,6 +67,7 @@ def parse_BRDF_rawdata(full_loc, verbose=0):
     length_of_data = {}  # Expected size of each parameter
     key_word_data = {}  # Values of each key from the subsequent line
     raw_data = {}  # output of data
+    tis_data = {}  # total internal scattering numbers
 
     preamble_finished = False
 
@@ -103,10 +104,12 @@ def parse_BRDF_rawdata(full_loc, verbose=0):
             current_angle_index = 0
             current_wavelength = float(re.split('\s*', next_line)[-1])
             raw_data[current_wavelength] = {key : [] for key in key_word_data['AngleOfIncidence']}
+            tis_data[current_wavelength] = {key : 0 for key in key_word_data['AngleOfIncidence']}
             continue
 
         if next_line.startswith('TIS'):  # increment incident angle
             current_angle = key_word_data['AngleOfIncidence'][current_angle_index]
+            tis_data[current_wavelength][current_angle] = next_line.split(' ')[-1]
             current_angle_index += 1
             continue
 
@@ -119,5 +122,5 @@ def parse_BRDF_rawdata(full_loc, verbose=0):
         raw_data[current_wavelength][current_angle].append([float(value) for value in next_line.split('\t')])
 
 
-    return key_word_data, raw_data
+    return tis_data, key_word_data, raw_data
 
